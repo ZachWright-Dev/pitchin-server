@@ -9,12 +9,15 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@auth/core": "^0.34.3",
+    "cors": "^2.8.6",
     "express": "^5.2.1"
   }
 }
