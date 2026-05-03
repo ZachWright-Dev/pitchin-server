@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                   String              @id @default(cuid())
+  name                 String?
+  email                String?             @unique
+  emailVerified        DateTime?           @map("email_verified")
+  image                String?
+  createdAt            DateTime            @default(now()) @map("created_at")
+  accounts             Account[]
+  billPayments         BillPayment[]
+  friendshipsInitiated Friendship[]        @relation("FriendshipInitiator")
+  friendshipsReceived  Friendship[]        @relation("FriendshipRecipient")
+  groupMemberships     GroupMember[]
+  ownedGroups          Group[]             @relation("GroupOwner")
+  itemClaims           ItemClaim[]
+  paymentsSent         SettlementPayment[] @relation("PaymentFrom")
+  paymentsReceived     SettlementPayment[] @relation("PaymentTo")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  initiatorId String           @map("initiator_id")
+  recipientId String           @map("recipient_id")
+  status      FriendshipStatus @default(pending)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  initiator   User             @relation("FriendshipInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("FriendshipRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([initiatorId, recipientId])
+  @@index([recipientId])
+  @@map("friendships")
+}
+
+model Group {
+  id          String              @id @default(cuid())
+  name        String
+  emoji       String?
+  inviteToken String?             @unique @map("invite_token")
+  createdById String              @map("created_by_id")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  members     GroupMember[]
+  createdBy   User                @relation("GroupOwner", fields: [createdById], references: [id])
+  receipt     Receipt?
+  settlements SettlementPayment[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  groupId  String   @map("group_id")
+  userId   String   @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, userId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+model Receipt {
+  id           String        @id @default(cuid())
+  groupId      String        @unique @map("group_id")
+  imageUrl     String?       @map("image_url")
+  subtotal     Decimal       @db.Decimal(10, 2)
+  taxAmount    Decimal       @default(0) @map("tax_amount") @db.Decimal(10, 2)
+  tipAmount    Decimal       @default(0) @map("tip_amount") @db.Decimal(10, 2)
+  grandTotal   Decimal       @map("grand_total") @db.Decimal(10, 2)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  billPayments BillPayment[]
+  items        ReceiptItem[]
+  group        Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("receipts")
+}
+
+model ReceiptItem {
+  id        String      @id @default(cuid())
+  receiptId String      @map("receipt_id")
+  name      String
+  quantity  Int         @default(1)
+  unitPrice Decimal     @map("unit_price") @db.Decimal(10, 2)
+  claims    ItemClaim[]
+  receipt   Receipt     @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId])
+  @@map("receipt_items")
+}
+
+model ItemClaim {
+  id          String      @id @default(cuid())
+  itemId      String      @map("item_id")
+  userId      String      @map("user_id")
+  shareWeight Decimal     @default(1.0) @map("share_weight") @db.Decimal(8, 4)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  item        ReceiptItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, userId])
+  @@index([userId])
+  @@map("item_claims")
+}
+
+model BillPayment {
+  id        String  @id @default(cuid())
+  receiptId String  @map("receipt_id")
+  payerId   String  @map("payer_id")
+  amount    Decimal @db.Decimal(10, 2)
+  payer     User    @relation(fields: [payerId], references: [id], onDelete: Cascade)
+  receipt   Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId])
+  @@map("bill_payments")
+}
+
+model SettlementPayment {
+  id         String   @id @default(cuid())
+  groupId    String   @map("group_id")
+  fromUserId String   @map("from_user_id")
+  toUserId   String   @map("to_user_id")
+  amount     Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now()) @map("created_at")
+  fromUser   User     @relation("PaymentFrom", fields: [fromUserId], references: [id])
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  toUser     User     @relation("PaymentTo", fields: [toUserId], references: [id])
+
+  @@index([groupId])
+  @@map("settlement_payments")
+}
+
+enum FriendshipStatus {
+  pending
+  accepted
+}
+
