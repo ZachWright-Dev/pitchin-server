@@ -1,4 +1,5 @@
-export interface GroupImageRequest {
+
+export interface GroupRequest {
     group_id: string
 }
 

@@ -145,7 +145,7 @@ export async function getDashboardData(userId: string): Promise<DashboardRespons
 
 }
 
-async function getGroupBalanceForUser(groupId:string, userId: string): Promise<number> {
+export async function getGroupBalanceForUser(groupId:string, userId: string): Promise<number> {
     // 1. What did the user pay toward the bill for this group
     const payments = await prisma.billPayment.aggregate({
         _sum: { amount: true },

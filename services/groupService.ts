@@ -25,5 +25,5 @@ export async function getGroupImageData(groupId: string): Promise<GroupImageResp
         groupImageType: group.groupImageType,
     };
 
-    return groupImageData; 
+    return groupImageData;
 }
