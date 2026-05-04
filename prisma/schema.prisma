@@ -18,6 +18,8 @@ model User {
   email                String?             @unique
   emailVerified        DateTime?           @map("email_verified")
   image                String?
+  avatar               Bytes?
+  avatarType           String?             @map("avatar_type")
   createdAt            DateTime            @default(now()) @map("created_at")
   accounts             Account[]
   billPayments         BillPayment[]
@@ -66,16 +68,18 @@ model Friendship {
 }
 
 model Group {
-  id          String              @id @default(cuid())
-  name        String
-  emoji       String?
-  inviteToken String?             @unique @map("invite_token")
-  createdById String              @map("created_by_id")
-  createdAt   DateTime            @default(now()) @map("created_at")
-  members     GroupMember[]
-  createdBy   User                @relation("GroupOwner", fields: [createdById], references: [id])
-  receipt     Receipt?
-  settlements SettlementPayment[]
+  id             String              @id @default(cuid())
+  name           String
+  emoji          String?
+  groupImage     Bytes?              @map("group_image")
+  groupImageType String?             @map("group_image_type")
+  inviteToken    String?             @unique @map("invite_token")
+  createdById    String              @map("created_by_id")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  members        GroupMember[]
+  createdBy      User                @relation("GroupOwner", fields: [createdById], references: [id])
+  receipt        Receipt?
+  settlements    SettlementPayment[]
 
   @@map("groups")
 }
@@ -168,4 +172,3 @@ enum FriendshipStatus {
   pending
   accepted
 }
-
