@@ -3,6 +3,7 @@ import authenticate from './middleware/authenticate';
 import cors from 'cors';
 import dashboardRoutes from './routes/dashboardRoutes';
 import groupRoutes from './routes/groupRoutes';
+import userRoutes from './routes/userRoutes';
 
 const app = express();
 app.use(express.json());
@@ -26,7 +27,7 @@ app.use(authenticate);
 app.use('/dashboard', dashboardRoutes);
 app.use('/user', userRoutes);
 app.use('/group', groupRoutes);
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
     res.send("Hello from PitchIn server!!!");
 });
 
