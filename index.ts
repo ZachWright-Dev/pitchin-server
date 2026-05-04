@@ -2,6 +2,7 @@ import express from 'express';
 import authenticate from './middleware/authenticate';
 import cors from 'cors';
 import dashboardRoutes from './routes/dashboardRoutes';
+import groupRoutes from './routes/groupRoutes';
 
 const app = express();
 app.use(express.json());
@@ -23,6 +24,8 @@ const PORT: number = parseInt(process.env.PORT, 10);
 
 app.use(authenticate);
 app.use('/dashboard', dashboardRoutes);
+app.use('/user', userRoutes);
+app.use('/group', groupRoutes);
 app.get('/', (req, res) => {
     res.send("Hello from PitchIn server!!!");
 });

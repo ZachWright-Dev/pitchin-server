@@ -1,4 +1,3 @@
-// import { PrismaClient } from "@prisma/client/extension";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
 import { Decimal } from "../generated/prisma/internal/prismaNamespace";
