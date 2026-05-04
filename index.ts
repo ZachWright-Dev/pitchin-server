@@ -1,6 +1,7 @@
 import express from 'express';
 import authenticate from './middleware/authenticate';
 import cors from 'cors';
+import dashboardRoutes from './routes/dashboardRoutes';
 
 const app = express();
 app.use(express.json());
@@ -21,6 +22,7 @@ if (!/^\d+$/.test(process.env.PORT)) {
 const PORT: number = parseInt(process.env.PORT, 10);
 
 app.use(authenticate);
+app.use('/dashboard', dashboardRoutes);
 app.get('/', (req, res) => {
     res.send("Hello from PitchIn server!!!");
 });
