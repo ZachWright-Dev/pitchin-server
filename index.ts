@@ -6,7 +6,7 @@ import groupRoutes from './routes/groupRoutes';
 import userRoutes from './routes/userRoutes';
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(cors({ origin: ['http://localhost:3000']}));
 
 
