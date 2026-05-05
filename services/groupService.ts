@@ -63,7 +63,6 @@ export async function getGroupImageData(groupId: string): Promise<GroupImageResp
 
 export async function getParsedReceiptData(base64Image: string, mimeType: string) {
     const jsonSchema = ReceiptSchema.toJSONSchema();
-    console.log("Calling Gemini");
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         config: { responseJsonSchema: jsonSchema, responseMimeType: "application/json"},

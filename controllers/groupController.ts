@@ -28,7 +28,6 @@ export const getParsedReceipt = async (req: Request, res: Response) => {
 
     try {
         const data = await getParsedReceiptData(base64Image, mimeType);
-        console.log(data);
         return res.status(200).json(data);
     } catch(err) {
         console.error("Failed to parse items", err);
