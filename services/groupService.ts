@@ -1,6 +1,11 @@
+import { randomUUID } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
-import { ReceiptSchema, type GroupImageResponse } from "../types/groups";
+import { ReceiptSchema,
+    type GroupImageResponse,
+    type CreateGroupRequest,
+    type CreateGroupResponse
+} from "../types/groups";
 import { GoogleGenAI } from "@google/genai";
 
 if (!process.env.GEMINI_API_KEY) {
@@ -37,6 +42,77 @@ const prisma = new PrismaClient({
 });
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+export async function createGroupAsync(request: CreateGroupRequest, userId: string): Promise<CreateGroupResponse> {
+    const { name, emoji, groupImage, groupImageType, receipt } = request;
+    const { image, items, taxAmount, tipAmount } = receipt;
+
+    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const grandTotal = subtotal + taxAmount + tipAmount;
+    const groupImageBuffer = groupImage ? Buffer.from(groupImage, "base64") : null;
+
+    console.log("group create 1")
+    const group = await prisma.group.create({
+        data: {
+            name,
+            emoji,
+            groupImage: groupImageBuffer,
+            groupImageType,
+            inviteToken: randomUUID(),
+            createdById: userId,
+            members: {
+                create: { userId },
+            },
+            receipt: {
+                create: {
+                    imageUrl: image,
+                    subtotal,
+                    taxAmount,
+                    tipAmount,
+                    grandTotal,
+                    items: {
+                        create: items.map((item) => ({
+                            name: item.name,
+                            quantity: item.quantity,
+                            unitPrice: item.unitPrice,
+                        })),
+                    },
+                },
+            },
+        },
+        include: {
+            receipt: {
+                include: { items: true },
+            },
+        },
+    });
+
+    const responseReceipt = {
+        id: group.receipt!.id,
+        subtotal: group.receipt!.subtotal.toNumber(),
+        taxAmount: group.receipt!.taxAmount.toNumber(),
+        tipAmount: group.receipt!.tipAmount.toNumber(),
+        grandTotal: group.receipt!.grandTotal.toNumber(),
+        items: group.receipt!.items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice.toNumber(),
+        })),
+    };
+    console.log("group create 3")
+    const response: CreateGroupResponse = {
+        id: group.id,
+        name: group.name,
+        emoji: group.emoji,
+        inviteToken: group.inviteToken!,
+        createdAt: group.createdAt.toISOString(),
+        receipt: responseReceipt,
+    };
+
+    console.log("return from service")
+    return response;
+}
 
 export async function getGroupImageData(groupId: string): Promise<GroupImageResponse>  {
     const group = await prisma.group.findUnique({

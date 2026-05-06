@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { getGroupImage, getParsedReceipt } from "../controllers/groupController";
+import { getGroupImage, getParsedReceipt, createGroup } from "../controllers/groupController";
 const router = Router();
 
+router.post('/', createGroup);
 router.post('/image', getGroupImage);
 router.post('/receipt-parse', getParsedReceipt);
 

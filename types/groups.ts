@@ -30,3 +30,49 @@ const ReceiptErrorSchema = z.object({
 });
 
 export const ReceiptSchema = z.discriminatedUnion("success", [ReceiptSuccessSchema, ReceiptErrorSchema])
+
+interface RequestReceiptItem {
+    name: string
+    quantity: number
+    unitPrice: number
+}
+
+interface ResponseReceiptItem {
+    id: string
+    name: string
+    quantity: number
+    unitPrice: number
+}
+
+interface RequestReceipt {
+    image: string | null
+    items: RequestReceiptItem[]
+    taxAmount: number
+    tipAmount: number
+}
+
+interface ResponseReceipt {
+    id: string
+    subtotal: number
+    taxAmount: number
+    tipAmount: number
+    grandTotal: number
+    items: ResponseReceiptItem[]
+}
+
+export interface CreateGroupRequest {
+    name: string
+    emoji: string | null
+    groupImage: string | null
+    groupImageType: string | null
+    receipt: RequestReceipt
+}
+
+export interface CreateGroupResponse {
+    id: string
+    name: string
+    emoji: string | null
+    inviteToken: string
+    createdAt: string
+    receipt: ResponseReceipt
+}

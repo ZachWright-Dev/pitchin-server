@@ -1,6 +1,28 @@
 import type { Request, Response } from "express";
-import type { GroupRequest, GroupImageResponse } from "../types/groups";
-import { getGroupImageData, getParsedReceiptData } from "../services/groupService";
+import type { GroupRequest, GroupImageResponse, CreateGroupRequest, CreateGroupResponse } from "../types/groups";
+import { getGroupImageData, getParsedReceiptData, createGroupAsync } from "../services/groupService";
+
+export const createGroup = async (req: Request, res: Response) => {
+    const requestBody: CreateGroupRequest = req.body;
+    const { name, receipt } = requestBody;
+    if (!req.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!name || !receipt) {
+        return res.status(400).json({ message: "Groups require name and receipt" });
+    }
+
+    try {
+        const responseBody: CreateGroupResponse = await createGroupAsync(requestBody, req.userId);
+        console.log("parsing service response")
+        return res.status(201).json(responseBody);
+    } catch(err) {
+        console.error(`Failed to create a group for user: ${req.userId}`);
+        console.error(err)
+        return res.status(500).json({message: "Internal Server Error"});
+    }
+
+}
 
 export const getGroupImage = async (req: Request, res: Response) => {
     const requestBody: GroupRequest = req.body;
