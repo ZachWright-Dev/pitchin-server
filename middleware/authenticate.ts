@@ -24,10 +24,11 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     try {
-        await decode({token, secret: AUTH_SECRET, salt});
+        const decoded = await decode({token, secret: AUTH_SECRET, salt});
+        req.userId = decoded?.id as string;
         next();
     } catch (e) {
-        console.error("Invlalid Token");
+        console.error("Invalid Token");
         return res.status(401).json({"message": "Invalid Token"});
     }
 

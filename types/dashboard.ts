@@ -1,7 +1,3 @@
-export interface DashboardRequest {
-    user_id: string
-}
-
 export interface DashboardResponse {
     summary: {
         overall_balance: number
