@@ -4,7 +4,9 @@ import { PrismaClient } from "../generated/prisma/client";
 import { ReceiptSchema,
     type GroupImageResponse,
     type CreateGroupRequest,
-    type CreateGroupResponse
+    type CreateGroupResponse,
+    type GetReceiptDataResponse,
+    type GetGroupMembersResponse
 } from "../types/groups";
 import { GoogleGenAI } from "@google/genai";
 
@@ -166,4 +168,54 @@ export async function getParsedReceiptData(base64Image: string, mimeType: string
         console.error(err);
         throw new Error("Error Parsing the Gemini Reponse");
     }
+}
+
+
+export async function getReceiptDataAsync(groupId: string): Promise<GetReceiptDataResponse> {
+    const receipt = await prisma.receipt.findUnique({
+        where: { groupId },
+        include: { items: true, group: true },
+    });
+
+    if (!receipt) {
+        throw new Error(`Receipt for group ${groupId} not found`);
+    }
+
+    const response: GetReceiptDataResponse = {
+        id: receipt.id,
+        image: receipt.imageUrl ?? "",
+        groupName: receipt.group.name,
+        subtotal: receipt.subtotal.toNumber(),
+        taxAmount: receipt.taxAmount.toNumber(),
+        tipAmount: receipt.tipAmount.toNumber(),
+        grandTotal: receipt.grandTotal.toNumber(),
+        items: receipt.items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice.toNumber(),
+        })),
+    };
+
+    return response;
+}
+
+export async function getGroupMembersAsync(groupId: string): Promise<GetGroupMembersResponse> {
+    const groupMembers = await prisma.groupMember.findMany({
+        where: { groupId },
+        include: {
+            user: {
+                select: { id: true, name: true },
+            },
+        },
+    });
+
+    const response: GetGroupMembersResponse = {
+        members: groupMembers.map((member) => ({
+            id: member.user.id,
+            name: member.user.name ?? "",
+        })),
+    };
+
+    return response;
 }

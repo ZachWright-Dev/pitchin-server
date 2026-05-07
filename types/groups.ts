@@ -76,3 +76,17 @@ export interface CreateGroupResponse {
     createdAt: string
     receipt: ResponseReceipt
 }
+
+export interface GetReceiptDataResponse extends ResponseReceipt {
+    image: string
+    groupName: string
+}
+
+interface GroupMember {
+    id: string
+    name: string
+}
+
+export interface GetGroupMembersResponse {
+    members: GroupMember[]
+}

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { GroupRequest, GroupImageResponse, CreateGroupRequest, CreateGroupResponse } from "../types/groups";
-import { getGroupImageData, getParsedReceiptData, createGroupAsync } from "../services/groupService";
+import type { GroupRequest, GroupImageResponse, CreateGroupRequest, CreateGroupResponse, GetReceiptDataResponse, GetGroupMembersResponse } from "../types/groups";
+import { getGroupImageData, getParsedReceiptData, createGroupAsync, getReceiptDataAsync, getGroupMembersAsync } from "../services/groupService";
 
 export const createGroup = async (req: Request, res: Response) => {
     const requestBody: CreateGroupRequest = req.body;
@@ -54,5 +54,37 @@ export const getParsedReceipt = async (req: Request, res: Response) => {
     } catch(err) {
         console.error("Failed to parse items", err);
         return res.status(500).json({ success: false, error: "Gemini threw an error" });
+    }
+}
+
+export const getReceiptData = async (req: Request, res: Response) => {
+    const requestBody: GroupRequest = req.body;
+    const { group_id } = requestBody;
+    if (!group_id) {
+        console.error("Please Include group ID")
+        return res.status(400).json({ message: "Please include groupId"});
+    }
+    try {
+        const responseBody: GetReceiptDataResponse = await getReceiptDataAsync(group_id);
+        return res.status(201).json(responseBody);
+    } catch(err) {
+        console.error(`Failed to get receipt data for group: ${group_id}`, err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+export const getGroupMembers = async (req: Request, res: Response) => {
+    const requestBody: GroupRequest = req.body;
+    const { group_id } = requestBody;
+    if (!group_id) {
+        console.error("Please Include group ID")
+        return res.status(400).json({ message: "Please Inlude groupId"});
+    }
+    try {
+        const responseBody: GetGroupMembersResponse = await getGroupMembersAsync(group_id);
+        return res.status(201).json(responseBody);
+    } catch(err){
+        console.error(`Failed to fetch group members for group ${group_id}`);
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 }
